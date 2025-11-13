@@ -14,7 +14,7 @@ test:
 
 build-csi-docker-image:
   variables:
-    EXTRA_ARGS: "-f csi.Dockerfile.dd"
+    EXTRA_ARGS: "-f docker/csi.Dockerfile.dd"
     IMAGE_NAME: "juicefs-csi-driver"
   extends: .build-docker-image
 
@@ -27,7 +27,7 @@ build-csi-nydus-image:
 
 build-mount-docker-image:
   variables:
-    EXTRA_ARGS: "-f ce.juicefs.Dockerfile.dd"
+    EXTRA_ARGS: "-f docker/ce.juicefs.Dockerfile.dd"
     IMAGE_NAME: "juicefs-mount"
   extends: .build-docker-image
 
