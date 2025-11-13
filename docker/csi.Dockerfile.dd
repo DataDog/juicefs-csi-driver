@@ -21,13 +21,13 @@ ARG GOPROXY
 ARG TARGETARCH
 
 WORKDIR /workspace
-COPY --from=project **/*.go ./
-COPY --from=project cmd ./cmd
-COPY --from=project pkg ./pkg
-COPY --from=project go.mod .
-COPY --from=project go.sum .
-COPY --from=project .git .
-COPY --from=project Makefile .
+COPY **/*.go ./
+COPY cmd ./cmd
+COPY pkg ./pkg
+COPY go.mod .
+COPY go.sum .
+COPY .git .
+COPY Makefile .
 # TODO: how should I set this?
 ENV GOPROXY=${GOPROXY:-https://proxy.golang.org}
 RUN make
