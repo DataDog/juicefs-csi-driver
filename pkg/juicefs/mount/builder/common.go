@@ -51,8 +51,9 @@ func (r *BaseBuilder) genPodTemplate(baseCnGen func() corev1.Container) *corev1.
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: r.jfsSetting.Attr.Namespace,
 			Labels: map[string]string{
-				common.PodTypeKey:          common.PodTypeValue,
-				common.PodUniqueIdLabelKey: r.jfsSetting.UniqueId,
+				common.PodTypeKey:            common.PodTypeValue,
+				common.PodUniqueIdLabelKey:   r.jfsSetting.UniqueId,
+				common.PodTargetNodeLabelKey: config.NodeName,
 			},
 			Annotations: make(map[string]string),
 		},
