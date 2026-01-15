@@ -55,6 +55,7 @@ var (
 				common.PodUniqueIdLabelKey:    "",
 				common.PodJuiceHashLabelKey:   "test",
 				common.PodUpgradeUUIDLabelKey: "test",
+				common.PodTargetNodeLabelKey:  "node",
 			},
 			Annotations: map[string]string{
 				common.JuiceFSUUID: "",
