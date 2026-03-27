@@ -329,6 +329,7 @@ func GenMetadata(jfsSetting *config.JfsSetting) (labels map[string]string, annot
 	labels[common.PodUpgradeUUIDLabelKey] = jfsSetting.UpgradeUUID
 	labels[common.PodTypeKey] = common.PodTypeValue
 	labels[common.PodUniqueIdLabelKey] = jfsSetting.UniqueId
+	labels[common.PodTargetNodeLabelKey] = config.NodeName
 	return
 }
 

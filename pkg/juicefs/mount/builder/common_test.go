@@ -55,6 +55,7 @@ func TestGenMetadata(t *testing.T) {
 				common.PodUniqueIdLabelKey:    "unique1",
 				common.PodJuiceHashLabelKey:   "hash1",
 				common.PodUpgradeUUIDLabelKey: "hash1",
+				common.PodTargetNodeLabelKey:  config.NodeName,
 			},
 			wantAnnotations: map[string]string{
 				"annotation1":             "value1",
@@ -82,6 +83,7 @@ func TestGenMetadata(t *testing.T) {
 				common.PodUniqueIdLabelKey:    "unique3",
 				common.PodJuiceHashLabelKey:   "hash1",
 				common.PodUpgradeUUIDLabelKey: "hash1",
+				common.PodTargetNodeLabelKey:  config.NodeName,
 			},
 			wantAnnotations: map[string]string{
 				common.JuiceFSUUID: "uuid3",
