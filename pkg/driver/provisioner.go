@@ -31,7 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
-	provisioncontroller "sigs.k8s.io/sig-storage-lib-external-provisioner/v10/controller"
+	provisioncontroller "sigs.k8s.io/sig-storage-lib-external-provisioner/v13/controller"
 
 	"github.com/prometheus/client_golang/prometheus"
 
