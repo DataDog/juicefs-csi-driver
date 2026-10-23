@@ -1,0 +1,82 @@
+# Copyright 2018 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG BASE_IMAGE=registry.ddbuild.io/images/base/gbi-ubuntu_2404-fips:release
+ARG BUILDER_IMAGE=registry.ddbuild.io/compute-delivery/go:latest
+ARG BUILD_ARGS=GOFIPS140=v1.0.0
+ARG JUICEFS_REPO_URL=https://github.com/DataDog/juicefs
+ARG JUICEFS_REPO_BRANCH=v1.4.2-dd
+ARG JUICEFS_REPO_REF=46af7afa9f819b8c9ddafd475fb828d22fe9dd17
+
+# Build juicefs-csi-driver executable.
+FROM --platform=$BUILDPLATFORM $BUILDER_IMAGE AS csi-builder
+ARG BUILD_ARGS
+ARG GOPROXY
+ARG TARGETARCH
+
+WORKDIR /workspace
+COPY **/*.go ./
+COPY cmd ./cmd
+COPY pkg ./pkg
+COPY go.mod .
+COPY go.sum .
+COPY .git .
+COPY Makefile .
+ENV GOPROXY=${GOPROXY:-https://proxy.golang.org}
+RUN env ${BUILD_ARGS} make && \
+    go version -m bin/juicefs-csi-driver | grep -F 'GOFIPS140=v1.0.0'
+
+# Build the immutable JuiceFS client selected above.
+FROM --platform=$BUILDPLATFORM $BUILDER_IMAGE AS juicefs-builder
+ARG BUILD_ARGS
+ARG GOPROXY
+ARG TARGETARCH
+ARG JUICEFS_REPO_URL
+ARG JUICEFS_REPO_BRANCH
+ARG JUICEFS_REPO_REF
+
+WORKDIR /workspace
+ENV GOPROXY=${GOPROXY:-https://proxy.golang.org}
+RUN apt-get update && apt-get install -y musl-tools
+RUN git clone --branch="${JUICEFS_REPO_BRANCH}" "${JUICEFS_REPO_URL}" juicefs && \
+    cd juicefs && \
+    git checkout --detach "${JUICEFS_REPO_REF}" && \
+    test "$(git rev-parse HEAD)" = "${JUICEFS_REPO_REF}" && \
+    env ${BUILD_ARGS} make juicefs && \
+    go version -m juicefs | grep -F 'GOFIPS140=v1.0.0'
+
+FROM $BASE_IMAGE
+ARG JUICEFS_REPO_REF
+ARG TARGETARCH
+
+LABEL com.datadoghq.juicefs.revision="${JUICEFS_REPO_REF}"
+
+USER root
+WORKDIR /app
+ENV JUICEFS_CLI=/usr/bin/juicefs
+
+ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini-${TARGETARCH} /tini
+RUN chmod +x /tini
+RUN apt-get update && apt-get install -y curl fuse procps iputils-ping strace iproute2 net-tools tcpdump lsof && \
+    rm -rf /var/cache/apt/* && mkdir -p /root/.juicefs
+
+COPY --from=csi-builder /workspace/bin/juicefs-csi-driver /usr/local/bin/
+COPY --from=juicefs-builder /workspace/juicefs/juicefs /usr/local/bin/
+
+RUN ln -s /usr/local/bin/juicefs /bin/mount.juicefs && \
+    /usr/local/bin/juicefs --version
+
+# The UID of the dog user is 501. A numeric UID lets kubelet verify runAsNonRoot.
+USER 501
+ENTRYPOINT ["/tini", "-g", "--", "juicefs-csi-driver"]

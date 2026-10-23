@@ -1,0 +1,36 @@
+include: https://gitlab-templates.ddbuild.io/compute-delivery/v3/compute-delivery.yml
+
+test:
+  extends: .compute-ci.go.test
+  tags: ["arch:amd64"]
+  variables:
+    GOTOOLCHAIN: "auto"
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_MEMORY_REQUEST: "8Gi"
+    KUBERNETES_MEMORY_LIMIT: "8Gi"
+  script:
+    - make test
+
+build-csi-docker-image:
+  extends: .build-docker-image
+  variables:
+    DOCKERFILE: "docker/csi.Dockerfile.dd"
+    IMAGE_NAME: "juicefs-csi-driver"
+
+build-csi-nydus-image:
+  extends: .build-nydus-image
+  needs: ["build-csi-docker-image"]
+  variables:
+    IMAGE_NAME: "juicefs-csi-driver"
+
+build-mount-docker-image:
+  extends: .build-docker-image
+  variables:
+    DOCKERFILE: "docker/ce.juicefs.Dockerfile.dd"
+    IMAGE_NAME: "juicefs-mount"
+
+build-mount-nydus-image:
+  extends: .build-nydus-image
+  needs: ["build-mount-docker-image"]
+  variables:
+    IMAGE_NAME: "juicefs-mount"
