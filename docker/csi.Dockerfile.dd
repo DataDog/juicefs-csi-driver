@@ -49,7 +49,8 @@ RUN cd /workspace && git clone --branch=$JUICEFS_REPO_BRANCH $JUICEFS_REPO_URL &
 
 FROM $BASE_IMAGE
 
-USER root
+# user root has UID 0
+USER 0
 
 ARG TARGETARCH
 ARG JUICEFS_CE_MOUNT_IMAGE
